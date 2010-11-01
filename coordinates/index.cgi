@@ -15,7 +15,7 @@ if(param){
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","");
 	#currently exact match only
 	my $sth = $dbh->prepare('select file,word, x1, y1, x2, y2 from WORDS where word like ?');
-	$sth->execute($building.'%');
+	$sth->execute('%'.$building.'%');
 	$sth->bind_columns(\my($file,$word,$x1,$y1,$x2,$y2));
 	print "[";
 	while (my@data = $sth->fetchrow_array()) {
@@ -33,15 +33,19 @@ print
        header,
        start_html(-title=> 'Building Locator', 
        			-base => 'true', 
+       			-style=> "index.css",
        			-onload => 'draw()', 
        			-script => { -language => 'javascript', -src => 'markers.js' }),
+       div({-id=>'form',-class=>'form'}),
        h2('Get the Location of the Prevessin Buildings'),
-       p,"A Perl + Ajax experiment",
-       start_form(-action=>''),
-       "Which building ? (press 'locate', not enter)",textfield(-name=>'building',-id=>'buildingName'),
+       p,h3("A Perl + Ajax experiment"),
+       p,"Which building ? (press 'locate', not enter)",
+       textfield(-name=>'building',-id=>'buildingName'),
        button(-value=>'Locate',-onClick=>'asyncBuilding()'),
-       end_form,
-       hr,"\n";
-    print canvas({-id=>'canvas',-width=>1589,-height=>1124});
+       "</div>",
+       div({-id => 'results',-class => 'results'}),
+       "</div>";#end_div();
+       
+    print canvas({-id=>'canvas',-width=>1589,-height=>1124}),"</canvas>";
     print end_html;
 }

@@ -6,9 +6,8 @@ This set of perl scripts, images and sql files allows one to locate the building
 Caveats :
 
 - the extractor script only work for the 'Prevessin' pdf.
-- please don't press 'enter' on the webpage, click or activate 'locate'.
-- no CSS yet.
-- it is really ugly.
+- pressing 'enter' on the webpage will not do anything. Click or activate 'locate' instead.
+- still ugly.
 
 Used perl modules :  
 CAM::PDF  

@@ -22,15 +22,15 @@ function asyncBuilding(){
 		if(http.readyState  == 4){
        		if(http.status  == 200) {
    	         	results = eval('(' + http.responseText + ')');
-   	         	if(results.length>0){
-   	         	  var ctx = document.getElementById('canvas').getContext('2d');
-    			  ctx.drawImage(document.prevessin,0,0);
-   	         	}
+   	         	var ctx = document.getElementById('canvas').getContext('2d');
+	   			ctx.drawImage(document.prevessin,0,0);
    	         	for(var i = 0; i<results.length; i++){
+   	  				
    					var loc = results[i];
    					if(loc != undefined && loc.word != undefined){
 	   					drawMarker(loc.word,loc.x1,loc.y1,loc.x2,loc.y2);
 	   				}
+
    				}
    	         	node = document.createElement('li');
    				//node.innerHTML = li.content;
@@ -43,7 +43,7 @@ function asyncBuilding(){
     	};
 		var test = document.getElementById("buildingName").value;
  		var url="buildingName="+test;
- 		http.open("POST", "",  true);
+ 		http.open("POST", "index.cgi",  true);
    		http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		http.setRequestHeader("Content-length", url.length);
 		http.setRequestHeader("Connection", "close");
@@ -67,6 +67,7 @@ function drawMarker(word,x1,y1,x2,y2){
     ctx.beginPath();
     ctx.lineWidth = 3;
     ctx.moveTo(0,0);
+    ctx.font="bold 16px sans-serif";
     y1 = (1124 - y1*1.3333  );  
     x1 = x1 * 1.3333;
     y2 = (1124 - y2*1.3333  );
@@ -74,7 +75,7 @@ function drawMarker(word,x1,y1,x2,y2){
     ctx.fillText(word, x1+3,12);
     ctx.moveTo(x1,0);
     ctx.lineTo(x1,y1);
-    ctx.lineTo(0,y1);
+    //ctx.lineTo(0,y1);
     ctx.stroke();
     
   }
