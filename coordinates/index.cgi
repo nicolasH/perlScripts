@@ -14,7 +14,7 @@ if(param){
 	print header('application/json');
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","");
 	#currently exact match only
-	my $sth = $dbh->prepare('select file,word, x1, y1, x2, y2 from WORDS where word like ?');
+	my $sth = $dbh->prepare('select file,word, x1, y1, x2, y2 from WORDS where word like ? order by word');
 	$sth->execute('%'.$building.'%');
 	$sth->bind_columns(\my($file,$word,$x1,$y1,$x2,$y2));
 	print "[";
@@ -43,7 +43,10 @@ print
        textfield(-name=>'building',-id=>'buildingName'),
        button(-value=>'Locate',-onClick=>'asyncBuilding()'),
        "</div>",
-       div({-id => 'results',-class => 'results'}),
+       div({-id => 'results_div',-class => 'results_div'}),
+       "<p id='results_title'>Results will appear here.</p>",
+       ul({-id => 'results_list',-class => 'results_list'}),
+       "</ul>",
        "</div>";#end_div();
        
     print canvas({-id=>'canvas',-width=>1589,-height=>1124}),"</canvas>";

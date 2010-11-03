@@ -17,25 +17,36 @@ function getRequest(){
 
 function asyncBuilding(){
 	var http = getRequest();
-
-	http.onreadystatechange  = function(){ 
+	//reseting the background.
+	cleanup();
+   	http.onreadystatechange  = function(){ 
 		if(http.readyState  == 4){
        		if(http.status  == 200) {
    	         	results = eval('(' + http.responseText + ')');
-   	         	var ctx = document.getElementById('canvas').getContext('2d');
-	   			ctx.drawImage(document.prevessin,0,0);
-   	         	for(var i = 0; i<results.length; i++){
-   	  				
+   	         	var txt = "";
+   	         	if(results.length > 1){
+   	         		txt = "Found "+results.length+" results : ";
+   	         	}
+   	         	if(results.length == 1 && results[0] != undefined && results[0].word != undefined){
+   	         		txt = "Found one result : ";
+   	         	}
+   	         	if(results.length < 1){
+   	         		txt = "No results found. <br/>Try with less letters or numbers.";
+   	         	}
+   	         	if(results.length >15){
+   	         		txt = "Found "+results.length+" result. Please refine your search. <br/> Showing first 15 :";
+   	         	}
+
+         		document.getElementById("results_title").innerHTML = txt;
+   	         	for(var i = 0; i<Math.min(results.length,15); i++){  	  				
    					var loc = results[i];
    					if(loc != undefined && loc.word != undefined){
-	   					drawMarker(loc.word,loc.x1,loc.y1,loc.x2,loc.y2);
+   						node = document.createElement('li');
+	   					node.innerHTML = loc.word;
+		   				document.getElementById("results_list").appendChild(node);		
+		   				drawMarker(node,loc.x1,loc.y1,loc.x2,loc.y2);
 	   				}
-
    				}
-   	         	node = document.createElement('li');
-   				//node.innerHTML = li.content;
-   				//node.id = li.id;
-   				//document.getElementById("list_enlever").appendChild(node);
        	    } else {
 	   	         document.getElementById('ajax').value="Error code " + http.status + " " +http.responseText;
         	    }
@@ -50,7 +61,22 @@ function asyncBuilding(){
    		http.send(url);
 	}
 
+/*
+Cleaning up the canvas and results
+*/
+function cleanup(){
 
+	var cell = document.getElementById("results_list");
+	if ( cell.hasChildNodes()){
+	    while ( cell.childNodes.length >= 1 ){
+	        cell.removeChild( cell.firstChild );       
+    	} 
+	}
+	document.getElementById("results_title").innerHTML="Fetching results...";
+	var ctx = document.getElementById('canvas').getContext('2d');
+	ctx.drawImage(document.prevessin,0,0);
+	
+}
 
 function draw() {
 	var ctx = document.getElementById('canvas').getContext('2d');
@@ -61,7 +87,14 @@ function draw() {
     document.prevessin.src = 'prevessin.png';
 }
  
-function drawMarker(word,x1,y1,x2,y2){
+function drawMarker(node,x1,y1,x2,y2){
+	var bbox = node.getBoundingClientRect();
+
+var xOffset=window.scrollX;//document.getElementById('canvas').parentNode.scrollLeft;
+var yOffset=window.scrollY;//document.getElementById('canvas').parentNode.scrollTop;
+
+    alert(xOffset+" "+yOffset);
+
   	var ctx = document.getElementById('canvas').getContext('2d');
     ctx.strokeStyle = 'darkorange';
     ctx.beginPath();
@@ -72,8 +105,14 @@ function drawMarker(word,x1,y1,x2,y2){
     x1 = x1 * 1.3333;
     y2 = (1124 - y2*1.3333  );
     x2 = x2 * 1.3333;
-    ctx.fillText(word, x1+3,12);
-    ctx.moveTo(x1,0);
+    //ctx.fillText(node.innerHTML, bbox.left,bbox.top+bbox.height); 
+    if( xOffset==undefined){
+    	xOffset=0;}
+	if( yOffset==undefined){
+    	yOffset=0;}
+	ctx.moveTo(bbox.left-7+xOffset,bbox.top+9+yOffset);
+	ctx.lineTo(x1,bbox.top+9+yOffset); 	
+ 	//ctx.moveTo(x1,0);
     ctx.lineTo(x1,y1);
     //ctx.lineTo(0,y1);
     ctx.stroke();
