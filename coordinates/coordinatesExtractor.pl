@@ -3,9 +3,11 @@
 use strict;
 use warnings;
 use CAM::PDF;
+use List::Util qw[min max];
+
 
 my $file = "CERN_Prevessin_A3_Paysage.pdf";
-#$file = "CERN_Meyrin_A3_Paysage.pdf";
+$file = "CERN_Meyrin_A3_Paysage.pdf";
 $file =~ m/^([^\.]+)\.pdf/;
 my $name = $1;
 
@@ -39,36 +41,48 @@ for my $pagenum (1 .. $pdf->numPages) {
   my $dst;
   for my $textblock (@text) {
     $dst = distance($previousBlock,$textblock);
-	#use the distance to calculate if words or letters belong together.
-	if($dst){
-		if($dst>=16 ||
-		(length $currentWord >2 && !defined belongsToSameLine($wordFirstTxt,$previousBlock,$textblock))
-		#building numbers
-		#($textblock->{str} =~ m/\d/ && $currentWord =~ m/^[0-9]+$/ &&  
-		# (length $currentWord>1) && $dst>($wordDstSum/((length $currentWord)-1)*1.1))
-		){
-			my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
-			printInsert($name,$currentWord,$line);
-			#print "\n";
-			$currentWord=$textblock->{str};
-			$wordDstSum = 0;
-			$wordFirstTxt = $textblock;
-		}else{
-			$currentWord = $currentWord . $textblock->{str};
-			$wordDstSum +=$dst;
-			if(length $currentWord>2){
-				belongsToSameLine($wordFirstTxt,$previousBlock,$textblock);
-			}
-		}
-	}else{#First iteration
-		$currentWord = $textblock->{str};
-		$wordFirstTxt = $textblock;
-	}
-	#print "text '$textblock->{str}' at ","($textblock->{left},$textblock->{bottom},$textblock->{width},$dst) \n";
+    if(!defined $dst){
+      $currentWord = $textblock->{str};
+      $wordFirstTxt = $textblock;
+      $lastDst = $dst;	
+      $previousBlock = $textblock;
+      next;
+    }
 
-	$lastDst = $dst;	
-	$previousBlock = $textblock;
-  }
+    my $sameLine = belongsToSameLine($wordFirstTxt,$previousBlock,$textblock,$currentWord);
+    my $averageDst = avgDst($currentWord,$wordDstSum);
+    #use the distance to calculate if words or letters belong together.
+    #$averageDst= $wordDstSum/(length $currentWord);
+    if(#building numbers
+       ($textblock->{str} =~ m/\d/ && $currentWord =~ m/^[0-9]+$/ && (length $currentWord>1) && $dst>$lastDst*1.19)
+       #unaligned letters
+       ||(defined $sameLine && !$sameLine)
+       #big letters
+       ||($dst > 24 && $lastDst && $dst>$lastDst*1.2 )
+       #Will trip when the new letter is |\/|
+       ||(defined $averageDst && $dst > $averageDst *2.1)
+      ){
+      
+      my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
+      printInsert($name,$currentWord,$line);
+      #print "\n";
+      $currentWord=$textblock->{str};
+      $wordDstSum = 0;
+      $wordFirstTxt = $textblock;
+    }else{
+      $currentWord = $currentWord . $textblock->{str};
+      $wordDstSum +=$dst;
+    }
+    if(!defined $averageDst){
+      $averageDst = 0;
+    }
+    if(!defined $sameLine){
+      $sameLine = "undef";
+    }
+    #print "text '$textblock->{str}' at ","($textblock->{left},$textblock->{bottom},$textblock->{width},dst:$dst,avg:$averageDst,sl:$sameLine) \n";
+    $lastDst = $dst;	
+    $previousBlock = $textblock;
+ }
   #last word
   my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
   printInsert($name,$currentWord,$line);
@@ -77,19 +91,27 @@ for my $pagenum (1 .. $pdf->numPages) {
 }
 
 sub distance {
-	my($txt1,$txt2) = @_;
-	if(!($txt1 && $txt2)){
-		return;}
-	my $x = $txt1->{left} - $txt2->{left};
-	my $y = $txt1->{bottom} - $txt2->{bottom};
-	return sqrt($x*$x+$y*$y);
+  my($txt1,$txt2) = @_;
+  if(!($txt1 && $txt2)){
+    return;}
+  my $x = $txt1->{left} - $txt2->{left};
+  my $y = $txt1->{bottom} - $txt2->{bottom};
+  return sqrt($x*$x+$y*$y);
+}
+
+sub avgDst {
+  my($currentWord,$wordDstSum) = @_;
+  if(length $currentWord>2){
+    return $wordDstSum / ((length $currentWord )-1);
+  }
+  return;
 }
 
 sub belongsToSameLine {
-	my($firstTxt,$lastTxt,$txt) = @_;
+	my($firstTxt,$lastTxt,$txt,$word) = @_;
 	my $dst = distance($firstTxt,$lastTxt);
 	my $dst_ = distance($firstTxt,$txt);
-	if (!defined $dst || !defined $dst_){
+	if (!defined $dst || !defined $dst_ || length($word)<2){
 		return;
 	}
 	
@@ -98,27 +120,68 @@ sub belongsToSameLine {
 	#deltas
 	$dx = $lastTxt->{left} - $firstTxt->{left};
 	$dy = $lastTxt->{bottom} - $firstTxt->{bottom};
-	if($dx != 0){
-		$dx = $dst / $dx;
-	}	
-	if($dy != 0){
-		$dy = $dst / $dy;
-	}
 	
 	$dx_ = $txt->{left} - $firstTxt->{left};
 	$dy_ = $txt->{bottom} - $firstTxt->{bottom};	
-	if($dx_!=0){
-		$dx_ = $dst_ / $dx_;
-	}	
-	if($dy_!=0){
-		$dy_ = $dst_ / $dy_;
+
+	#factor
+	my( $cx,$cy,$cx_,$cy_) = 1;
+	
+	#same x :
+	if($dx == 0){
+	  if($dx_ ==0){
+	    #print " same vertical line \n";
+	    return 1;
+	  }else{	  
+	    #print "dx = $dx & dx_ = $dx_ :: different vertical line -- ";
+	    return 0;
+	  }
 	}
-	if(abs($dx - $dx_)<0.2 && abs($dy - $dy_)<0.2){
-		return 1;
-	}else{
-		return
+	#dx != 0
+	#same y
+	if($dy == 0){
+	  if($dy_ == 0){
+	    #print "same horizontal line \n";
+	    return 1;
+	  }#else{
+	    #print "dy = $dy & dy_ = $dy_ :: different horizontal line \n";
+	    #return 0;
+	  #}
 	}
-}
+	if($dy==0 && $dy_ > -0.1 && $dy_ < 0.02){
+	  #print "dy = $dy within a hair of dy_=$dy_ \n";	
+	  return 1;
+	}
+	if($dx == 0){
+	  #print "dx = $dx & dx_ = $dx_ :: different vertical lines -- ";
+	  return 0;
+	}
+	# same dy/dx
+	my $c = $dy / $dx;
+	my $c_;
+	if($dx_ !=0 ){
+	  $c_= $dy_/$dx_;
+	}
+	if($c == $c_){
+	  return 1;
+	}
+	if(abs(abs($c) - abs($c_))<0.12){
+	  #print "c = $c within 0.1 of c_=$c_ --";
+	  return 1;
+	}
+	$c = abs $c;
+	$c_ = abs $c_;
+	if($c == 0 || $c_ == 0){
+	  #print "#c : $c - c_ : $c_\n";
+	}
+	my $c_c = min($c,$c_)/max($c,$c_);
+	if($c_c > 0.9){
+	  #print "c = $c within 0.1% of c_=$c_ --";
+	  return 1;
+	}
+	#print "c = $c c_ = $c_ --";
+	return 0;
+      }
 
 sub underlinePoints {
 	my($firstTxt,$lastTxt,$currentWord) = @_;
@@ -138,8 +201,12 @@ sub underlinePoints {
 	$dx = $x2 - $x1;
 	$dy = $y2 - $y1;
 	#print "current w : ",$currentWord," length", length $currentWord , "\n";
-	my $wordLen = $dst * length($currentWord) /(length($currentWord)-1);
-
+	my $wordLen;
+	if(length($currentWord)<2){
+	    $wordLen = 1.5 * $dst;
+	}else{
+	    $wordLen = $dst * (length($currentWord) /(length($currentWord)-1));
+	}
 	if($dx != 0){
 		$dx = $dst / $dx;
 		$x2 = $x1 + ($wordLen / $dx);
@@ -158,10 +225,10 @@ sub underlinePoints {
 }
 
 sub printInsert{
-	my ($name,$currentWord,$line) = @_;
-	print "insert into WORDS values(\"$name\",\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n"
-}	
-			
+  my ($name,$currentWord,$line) = @_;
+  print "insert into WORDS values(\"$name\",\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n"
+  #print "\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n"
+}
 package MyRenderer;
 use base 'CAM::PDF::GS';
 
