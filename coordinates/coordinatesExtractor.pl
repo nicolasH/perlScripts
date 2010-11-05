@@ -5,89 +5,99 @@ use warnings;
 use CAM::PDF;
 use List::Util qw[min max];
 
+print "create table FILES (file STRING, x1 float,y1 float, width float, height float);\n";
+print "create table WORDS (file STRING,word STRING,x1 float,y1 float,x2 float,y2 float);\n";
 
 my $file = "CERN_Prevessin_A3_Paysage.pdf";
+extractWords($file);
 $file = "CERN_Meyrin_A3_Paysage.pdf";
-$file =~ m/^([^\.]+)\.pdf/;
-my $name = $1;
+extractWords($file);
 
-my $pdf = CAM::PDF->new($file) or die $CAM::PDF::errstr;
-
-for my $pagenum (1 .. $pdf->numPages) {
-  my @dim =  $pdf->getPageDimensions($pagenum);
-  #Actually the MediaBox x,y,width,height;
-  print "insert into FILES(\"$name\",$dim[0],$dim[1],$dim[2],$dim[3]);\n";
+sub extractWords{
+  my($file_arg) = @_;
+  $file_arg =~ m/^([^\.]+)\.pdf/;
+  my $name = $1;
   
-  my $pagedict = $pdf->getPage($pagenum);
-  my $rotate = 0;
-  while ($pagedict) {
-   	$rotate = $pdf->getValue($pagedict->{Rotate});
-    if (defined $rotate) {
-      last;
+  my $pdf = CAM::PDF->new($file_arg) or die $CAM::PDF::errstr;
+  
+  for my $pagenum (1 .. $pdf->numPages) {
+    my @dim =  $pdf->getPageDimensions($pagenum);
+    #Actually the MediaBox x,y,width,height;
+    print "insert into FILES(\"$name\",$dim[0],$dim[1],$dim[2],$dim[3]);\n";
+    
+    my $pagedict = $pdf->getPage($pagenum);
+    my $rotate = 0;
+    while ($pagedict) {
+      $rotate = $pdf->getValue($pagedict->{Rotate});
+      if (defined $rotate) {
+	last;
+      }
+      my $parent = $pagedict->{Parent};
+      $pagedict = $parent && $pdf->getValue($parent);
     }
-    my $parent = $pagedict->{Parent};
-    $pagedict = $parent && $pdf->getValue($parent);
-  }
-  #print ";/Rotate [$rotate]\n";
-
-  my $pagetree = $pdf->getPageContentTree($pagenum) or die;
-  my @text = $pagetree->traverse('MyRenderer')->getTextBlocks;
-  my $previousBlock ;
-  my $currentWord="";
-  my $lastDst=0;
-  my $wordDstSum = 0;
-  my $firstBlock;
-  my $wordFirstTxt;
-  my $dst;
-  for my $textblock (@text) {
-    $dst = distance($previousBlock,$textblock);
-    if(!defined $dst){
-      $currentWord = $textblock->{str};
-      $wordFirstTxt = $textblock;
+    #print ";/Rotate [$rotate]\n";
+    
+    my $pagetree = $pdf->getPageContentTree($pagenum) or die;
+    my @text = $pagetree->traverse('MyRenderer')->getTextBlocks;
+    my $previousBlock ;
+    my $currentWord="";
+    my $lastDst=0;
+    my $wordDstSum = 0;
+    my $firstBlock;
+    my $wordFirstTxt;
+    my $dst;
+    for my $textblock (@text) {
+      $dst = distance($previousBlock,$textblock);
+      if(!defined $dst){
+	$currentWord = $textblock->{str};
+	$wordFirstTxt = $textblock;
+	$lastDst = $dst;	
+	$previousBlock = $textblock;
+	next;
+      }
+      
+      my $sameLine = belongsToSameLine($wordFirstTxt,$previousBlock,$textblock,$currentWord);
+      my $averageDst = avgDst($currentWord,$wordDstSum);
+      #use the distance to calculate if words or letters belong together.
+      #$averageDst= $wordDstSum/(length $currentWord);
+      if(#building numbers
+	 ($textblock->{str} =~ m/\d/ && $currentWord =~ m/^[0-9]+$/ && (length $currentWord>1) && $dst>$lastDst*1.2)
+	 ||($textblock->{str} =~ m/\d/ && $currentWord =~ m/^[0-9]+$/ && (length $currentWord == 1) && $dst>10)
+	 #unaligned letters
+	 ||(defined $sameLine && !$sameLine)
+	 #big letters
+	 ||($dst > 24)
+	 ||(defined $lastDst && $dst>$lastDst*3.9 )
+	 #Will trip when the new letter is |\/|
+	 ||(defined $averageDst && $dst > $averageDst *2.5)
+	){
+	
+	my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
+	printInsert($name,$currentWord,$line);
+	#print "\n";
+	$currentWord=$textblock->{str};
+	$wordDstSum = 0;
+	$wordFirstTxt = $textblock;
+      }else{
+	$currentWord = $currentWord . $textblock->{str};
+	$wordDstSum +=$dst;
+      }
+      if(!defined $averageDst){
+	$averageDst = 0;
+      }
+      if(!defined $sameLine){
+	$sameLine = "undef";
+      }
+      #print "text '$textblock->{str}' at ","($textblock->{left},$textblock->{bottom},$textblock->{width},dst:$dst,avg:$averageDst,sl:$sameLine) \n";
       $lastDst = $dst;	
       $previousBlock = $textblock;
-      next;
     }
-
-    my $sameLine = belongsToSameLine($wordFirstTxt,$previousBlock,$textblock,$currentWord);
-    my $averageDst = avgDst($currentWord,$wordDstSum);
-    #use the distance to calculate if words or letters belong together.
-    #$averageDst= $wordDstSum/(length $currentWord);
-    if(#building numbers
-       ($textblock->{str} =~ m/\d/ && $currentWord =~ m/^[0-9]+$/ && (length $currentWord>1) && $dst>$lastDst*1.19)
-       #unaligned letters
-       ||(defined $sameLine && !$sameLine)
-       #big letters
-       ||($dst > 24 && $lastDst && $dst>$lastDst*1.2 )
-       #Will trip when the new letter is |\/|
-       ||(defined $averageDst && $dst > $averageDst *2.1)
-      ){
-      
-      my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
-      printInsert($name,$currentWord,$line);
-      #print "\n";
-      $currentWord=$textblock->{str};
-      $wordDstSum = 0;
-      $wordFirstTxt = $textblock;
-    }else{
-      $currentWord = $currentWord . $textblock->{str};
-      $wordDstSum +=$dst;
-    }
-    if(!defined $averageDst){
-      $averageDst = 0;
-    }
-    if(!defined $sameLine){
-      $sameLine = "undef";
-    }
-    #print "text '$textblock->{str}' at ","($textblock->{left},$textblock->{bottom},$textblock->{width},dst:$dst,avg:$averageDst,sl:$sameLine) \n";
-    $lastDst = $dst;	
-    $previousBlock = $textblock;
- }
-  #last word
-  my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
-  printInsert($name,$currentWord,$line);
-
-  #print "== last word : $currentWord\n";
+    #last word
+    my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
+    printInsert($name,$currentWord,$line);
+    
+    #print "== last word : $currentWord\n";
+  }
 }
 
 sub distance {
@@ -124,44 +134,39 @@ sub belongsToSameLine {
 	$dx_ = $txt->{left} - $firstTxt->{left};
 	$dy_ = $txt->{bottom} - $firstTxt->{bottom};	
 
-	#factor
-	my( $cx,$cy,$cx_,$cy_) = 1;
-	
 	#same x :
-	if($dx == 0){
-	  if($dx_ ==0){
-	    #print " same vertical line \n";
-	    return 1;
-	  }else{	  
-	    #print "dx = $dx & dx_ = $dx_ :: different vertical line -- ";
-	    return 0;
-	  }
+	if($dx == 0 && $dx_ ==0){
+	  #print " same vertical line \n";
+	  return 1;
 	}
-	#dx != 0
 	#same y
-	if($dy == 0){
-	  if($dy_ == 0){
-	    #print "same horizontal line \n";
-	    return 1;
-	  }#else{
-	    #print "dy = $dy & dy_ = $dy_ :: different horizontal line \n";
-	    #return 0;
-	  #}
+	if($dy == 0 && $dy_ == 0){
+	  #print "same horizontal line \n";
+	  return 1;
 	}
-	if($dy==0 && $dy_ > -0.1 && $dy_ < 0.02){
+	if($dy==0 && $dy_ > -0.1 && $dy_ < 0.1){
 	  #print "dy = $dy within a hair of dy_=$dy_ \n";	
 	  return 1;
 	}
-	if($dx == 0){
-	  #print "dx = $dx & dx_ = $dx_ :: different vertical lines -- ";
-	  return 0;
+	if($dy_==0 && $dy > -0.1 && $dy < 0.1){
+	  #print "dy = $dy within a hair of dy_=$dy_ \n";	
+	  return 1;
+	}
+	if($dx == 0 && $dx_ > -0.1 && $dx_ < 0.1){
+	  #print "dx = $d within a hair of dx_=$dx_ \n";	
+	  return 1;
+	}
+	if($dx_ == 0 && $dx > -0.1 && $dx < 0.1){
+	  #print "dx = $d within a hair of dx_=$dx_ \n";	
+	  return 1;
 	}
 	# same dy/dx
+	if($dx ==0 || $dx_==0){
+	  return 0;
+	} 
 	my $c = $dy / $dx;
-	my $c_;
-	if($dx_ !=0 ){
-	  $c_= $dy_/$dx_;
-	}
+	my $c_ = $dy_/$dx_;
+	
 	if($c == $c_){
 	  return 1;
 	}
@@ -226,7 +231,7 @@ sub underlinePoints {
 
 sub printInsert{
   my ($name,$currentWord,$line) = @_;
-  print "insert into WORDS values(\"$name\",\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n"
+  print "insert into WORDS values(\"$name\",\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n";
   #print "\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n"
 }
 package MyRenderer;
