@@ -23,7 +23,7 @@ sub extractWords{
   for my $pagenum (1 .. $pdf->numPages) {
     my @dim =  $pdf->getPageDimensions($pagenum);
     #Actually the MediaBox x,y,width,height;
-    print "insert into FILES(\"$name\",$dim[0],$dim[1],$dim[2],$dim[3]);\n";
+    print "insert into FILES values(\"$name\",$dim[0],$dim[1],$dim[2],$dim[3]);\n";
     
     my $pagedict = $pdf->getPage($pagenum);
     my $rotate = 0;

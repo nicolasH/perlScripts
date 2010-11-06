@@ -1,6 +1,6 @@
 create table FILES (file STRING, x1 float,y1 float, width float, height float);
 create table WORDS (file STRING,word STRING,x1 float,y1 float,x2 float,y2 float);
-insert into FILES("CERN_Prevessin_A3_Paysage",36.5,749.5,1224.5,1589.5);
+insert into FILES values("CERN_Prevessin_A3_Paysage", 36.5, 749.5, 1224.5, 1589.5);
 insert into WORDS values("CERN_Prevessin_A3_Paysage","LE LION (Ruisseau)", 923.17285, 1511.13965, 924.902653725153, 1521.11571145319);
 insert into WORDS values("CERN_Prevessin_A3_Paysage","Canal du Moulin", 973.71387, 1494.73828, 975.319936968857, 1503.02142258593);
 insert into WORDS values("CERN_Prevessin_A3_Paysage","Le LION", 541.71484, 579.12158, 542.792077190867, 578.958108356);
@@ -136,7 +136,7 @@ insert into WORDS values("CERN_Prevessin_A3_Paysage","Groupe FM", 1020.10059, 26
 insert into WORDS values("CERN_Prevessin_A3_Paysage","Section Information Site et Patrimoine", 966.87109, 263.95117, 1116.61794121574, 263.95117);
 insert into WORDS values("CERN_Prevessin_A3_Paysage","200 m", 1014.03711, 136.03125, 1047.7903709375, 136.03125);
 insert into WORDS values("CERN_Prevessin_A3_Paysage","etres", 1053.90104125, 136.03125, 1085.78312626563, 136.03125);
-insert into FILES("CERN_Meyrin_A3_Paysage",589,231.61035,1779.55078,1073.5);
+insert into FILES values("CERN_Meyrin_A3_Paysage",589,231.61035,1779.55078,1073.5);
 insert into WORDS values("CERN_Meyrin_A3_Paysage","375", 557.36133, 349.42871, 570.86350169385, 349.5651295505);
 insert into WORDS values("CERN_Meyrin_A3_Paysage","PS AUDITORIUM", 837.11914, 359.23438, 845.7276363731, 359.23438);
 insert into WORDS values("CERN_Meyrin_A3_Paysage","TS AUDITORIUM", 448.00244, 395.75391, 456.037751114675, 398.66001020935);
