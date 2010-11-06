@@ -5,7 +5,7 @@ use strict;
 use DBI;
 use DBD::SQLite;
 
-my $dbfile = "prevessin.db";
+my $dbfile = "CERN_Prevessin_A3_Paysage.db";
 
 my @result;
 my $building = param('buildingName');

@@ -84,18 +84,16 @@ function draw() {
     document.prevessin.onload = function(){
       ctx.drawImage(document.prevessin,0,0);
     }
-    document.prevessin.src = 'prevessin.png';
+    document.prevessin.src = 'CERN_Prevessin_A3_Paysage.png';
 }
  
 function drawMarker(node,x1,y1,x2,y2){
 	var bbox = node.getBoundingClientRect();
 
-var xOffset=window.scrollX;//document.getElementById('canvas').parentNode.scrollLeft;
-var yOffset=window.scrollY;//document.getElementById('canvas').parentNode.scrollTop;
+	var xOffset=window.scrollX;//document.getElementById('canvas').parentNode.scrollLeft;
+	var yOffset=window.scrollY;//document.getElementById('canvas').parentNode.scrollTop;
 
-    alert(xOffset+" "+yOffset);
-
-  	var ctx = document.getElementById('canvas').getContext('2d');
+    var ctx = document.getElementById('canvas').getContext('2d');
     ctx.strokeStyle = 'darkorange';
     ctx.beginPath();
     ctx.lineWidth = 3;
