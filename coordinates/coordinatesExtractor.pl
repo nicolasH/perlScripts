@@ -1,29 +1,52 @@
 #sources : 
 #http://stackoverflow.com/questions/620470/how-can-i-get-the-width-and-height-of-a-text-string-with-campdf
+
+#package coordinatesExtractor;
 use strict;
 use warnings;
 use CAM::PDF;
 use List::Util qw[min max];
+use DBI;
+use DBD::SQLite;
 
-print "create table FILES (file STRING, x1 float,y1 float, width float, height float);\n";
-print "create table WORDS (file STRING,word STRING,x1 float,y1 float,x2 float,y2 float);\n";
+my $dbh = DBI->connect("dbi:SQLite:dbname=sites.db","","");
+
+my $fileTable = "create table FILES (file TEXT PRIMARY KEY, x1 REAL,y1 REAL, width REAL, height REAL)";
+my $wordsTable = "create table WORDS (file TEXT,word TEXT,x1 REAL,y1 REAL,x2 REAL,y2 REAL,FOREIGN KEY(file) references FILES(file) )";
+my $sth = $dbh->prepare($fileTable);
+$sth->execute();
+$sth->finish;
+$sth = $dbh->prepare($wordsTable);
+$sth->execute();
+$sth->finish;
+
+print $fileTable,"\n";
+print $wordsTable,"\n";
 
 my $file = "CERN_Prevessin_A3_Paysage.pdf";
 extractWords($file);
 $file = "CERN_Meyrin_A3_Paysage.pdf";
 extractWords($file);
+undef($dbh);
 
 sub extractWords{
   my($file_arg) = @_;
   $file_arg =~ m/^([^\.]+)\.pdf/;
   my $name = $1;
+
+  my $insertFile ='insert into FILES values(?,?,?,?,?)';
+  my $insertWord ='insert into WORDS values(?,?,?,?,?,?)';
+  my $iWords = $dbh->prepare($insertWord);
   
   my $pdf = CAM::PDF->new($file_arg) or die $CAM::PDF::errstr;
-  
+    
+   
   for my $pagenum (1 .. $pdf->numPages) {
     my @dim =  $pdf->getPageDimensions($pagenum);
     #Actually the MediaBox x,y,width,height;
-    print "insert into FILES values(\"$name\",$dim[0],$dim[1],$dim[2],$dim[3]);\n";
+    my $sth = $dbh->prepare($insertFile);
+	$sth->execute($name,$dim[0],$dim[1],$dim[2],$dim[3]);
+	$sth->finish;
     
     my $pagedict = $pdf->getPage($pagenum);
     my $rotate = 0;
@@ -73,7 +96,11 @@ sub extractWords{
 	){
 	
 	my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
-	printInsert($name,$currentWord,$line);
+  #print "insert into WORDS values(\"$name\",\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n";
+  $iWords->execute($name,$currentWord, $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});
+  #print "\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n"
+
+
 	#print "\n";
 	$currentWord=$textblock->{str};
 	$wordDstSum = 0;
@@ -94,9 +121,9 @@ sub extractWords{
     }
     #last word
     my $line = underlinePoints($wordFirstTxt,$previousBlock,$currentWord);
-    printInsert($name,$currentWord,$line);
-    
+    $iWords->execute($name,$currentWord, $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});
     #print "== last word : $currentWord\n";
+    $iWords->finish;
   }
 }
 
@@ -229,11 +256,6 @@ sub underlinePoints {
 	}	
 }
 
-sub printInsert{
-  my ($name,$currentWord,$line) = @_;
-  print "insert into WORDS values(\"$name\",\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n";
-  #print "\"$currentWord\", $line->{x1}, $line->{y1}, $line->{x2}, $line->{y2});\n"
-}
 package MyRenderer;
 use base 'CAM::PDF::GS';
 
