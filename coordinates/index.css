@@ -1,31 +1,91 @@
 /* @override http://127.0.0.1/~niko/perlScripts/coordinates/index.css */
 
+html{
+	font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+}
 .form{
+	z-index: 10;
 	display: block;
+	position: absolute;
+	top: 0px;
+	left: 0px;
 	position: absolute;
 	background: white;
 	border: 4px solid black;
 	padding-left: 10pt;
 	padding-right: 10pt;
-	top: 39px;
-	left: 54px;
-	font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
 }
-.results_div {
+
+.title_div_meyrin{
+	z-index: 8;
 	display: block;
 	position: absolute;
-	background: rgba(0,255,0,0.1);
-	border: 4px solid black;
-	padding-left: 10pt;
-	padding-right: 10pt;
-	top: 220px;
-	left: 54px;
-	width: 200px;
-	font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+	top: 180px;
+	left: 65px;
+	width: 115px;
+	height: 25px;
+	border-bottom: solid;
+	border-left: solid;
+	border-top: solid;
 }
-.canvas{
-	z-index: -3;
+
+.title_div_prevessin{
+	z-index: 7;
 	display: block;
+	position: absolute;
+	top: 180px;
+	left: 180px;
+	width: 115px;
+	height: 25px;
+	border-bottom: solid;
+	border-left: solid;
+	border-top: solid;	
+	border-right: solid;
+	
+}
+
+.results_div_prevessin {
+	z-index: 6;
+	display: block;
+	position: absolute;
+	top: 205px;
+	left: 65px;
+	width: 230px;
+	border-left: solid;
+	border-right: solid;
+	border-bottom: solid;
+	visibility: hidden;
+}
+.results_div_meyrin {
+	z-index: 5;
+	display: block;
+	position: absolute;
+	top: 205px;
+	left: 65px;
+	width: 230px;
+	border-left: solid;
+	border-right: solid;
+	border-bottom: solid;
+	visibility: hidden;
+}
+
+#canvas_prevessin{
+	z-index: 3;
 	margin:-0px;
 	padding:0px;
+	display: block;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	/*visibility: hidden;*/
+}
+#canvas_meyrin{
+	z-index: 2;
+	margin:-0px;
+	padding:-0px;
+	display: block;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	/*visibility: hidden;*/
 }

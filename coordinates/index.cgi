@@ -5,7 +5,10 @@ use strict;
 use DBI;
 use DBD::SQLite;
 
-my $dbfile = "CERN_Prevessin_A3_Paysage.db";
+#my $dbfile = "CERN_Meyrin_A3_Paysage.db";
+my $dbfile = "sites.db";
+my $meyrin = "CERN_Meyrin_A3_Paysage";
+my $prevessin = "CERN_Prevessin_A3_Paysage";
 
 my @result;
 my $building = param('buildingName');
@@ -20,7 +23,7 @@ if(param){
 	print "[";
 	while (my@data = $sth->fetchrow_array()) {
     	if(defined $word){
-	   		print '{"word" : "'.$word.'", "x1" : '.$x1.', "y1": '.$y1.', "x2":'.$x2.',"y2":'.$y2.'},';
+	   		print '{"word" : "'.$word.'", "filePrefix": "'.$file.'","x1" : '.$x1.', "y1": '.$y1.', "x2":'.$x2.',"y2":'.$y2.'},';
     	}
 	}
 	print ']';
@@ -37,18 +40,34 @@ print
        			-onload => 'draw()', 
        			-script => { -language => 'javascript', -src => 'markers.js' }),
        div({-id=>'form',-class=>'form'}),
-       h2('Get the Location of the Prevessin Buildings'),
-       p,h3("A Perl + Ajax experiment"),
-       p,"Which building ? (press 'locate', not enter)",
+       h2('CERN Prevessin and Meyrin Building locator'),
+       #p,h3("A Perl + Ajax experiment"),
+       p,"Which building ? (click locate).",
        textfield(-name=>'building',-id=>'buildingName'),
        button(-value=>'Locate',-onClick=>'asyncBuilding()'),
-       "</div>",
-       div({-id => 'results_div',-class => 'results_div'}),
-       "<p id='results_title'>Results will appear here.</p>",
-       ul({-id => 'results_list',-class => 'results_list'}),
-       "</ul>",
-       "</div>";#end_div();
-       
-    print canvas({-id=>'canvas',-width=>1589,-height=>1124}),"</canvas>";
+       "</div>\n";
+
+		#the 'tab'       
+       print div({-id => 'title_div_meyrin',-class => 'title_div_meyrin',-onmouseover => "showImage('$meyrin');"}),
+       "Meyrin :",
+       "</div>\n";
+
+       print div({-id => 'title_div_prevessin',-class => 'title_div_prevessin',-onmouseover => "showImage('$prevessin');"}),
+       "Prevessin :",
+       "</div>\n";
+       #the 'tab' content
+     
+       print div({-id => 'results_div_meyrin',-class => 'results_div_meyrin'}),
+       ul({-id => 'results_list_meyrin',-class => 'results_list'}),
+       "</ul>\n",
+       "</div>\n";
+
+       print div({-id => 'results_div_prevessin',-class => 'results_div_prevessin'}),
+       ul({-id => 'results_list_prevessin',-class => 'results_list'}),
+       "</ul>\n",
+       "</div>\n";
+
+    print canvas({-id=>'canvas_prevessin',-width=>1589,-height=>1124}),"</canvas>\n";
+    print canvas({-id=>'canvas_meyrin',-width=>1589,-height=>1124}),"</canvas>\n";
     print end_html;
 }

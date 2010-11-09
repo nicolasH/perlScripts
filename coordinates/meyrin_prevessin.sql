@@ -1,5 +1,5 @@
-create table FILES (file STRING, x1 float,y1 float, width float, height float);
-create table WORDS (file STRING,word STRING,x1 float,y1 float,x2 float,y2 float);
+create table FILES (file TEXT PRIMARY KEY, x1 REAL,y1 REAL, width REAL, height REAL);
+create table WORDS (file TEXT,word TEXT,x1 REAL,y1 REAL,x2 REAL,y2 REAL,FOREIGN KEY(file) references FILES(file));
 insert into FILES values("CERN_Prevessin_A3_Paysage", 36.5, 749.5, 1224.5, 1589.5);
 insert into WORDS values("CERN_Prevessin_A3_Paysage","LE LION (Ruisseau)", 923.17285, 1511.13965, 924.902653725153, 1521.11571145319);
 insert into WORDS values("CERN_Prevessin_A3_Paysage","Canal du Moulin", 973.71387, 1494.73828, 975.319936968857, 1503.02142258593);
