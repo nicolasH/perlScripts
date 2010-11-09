@@ -17,7 +17,7 @@ if(param){
 	print header('application/json');
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","");
 	#currently exact match only
-	my $sth = $dbh->prepare('select file,word, x1, y1, x2, y2 from WORDS where word like ? order by word');
+	my $sth = $dbh->prepare('select file,word, x1, y1, x2, y2 from WORDS where word like ? order by word+0');
 	$sth->execute('%'.$building.'%');
 	$sth->bind_columns(\my($file,$word,$x1,$y1,$x2,$y2));
 	print "[";
