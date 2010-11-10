@@ -69,5 +69,17 @@ print
 
     print canvas({-id=>'canvas_prevessin',-width=>1589,-height=>1124}),"</canvas>\n";
     print canvas({-id=>'canvas_meyrin',-width=>1589,-height=>1124}),"</canvas>\n";
+    print <<'JAVASCRIPT';
+    <script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+	var pageTracker = _gat._getTracker("UA-3650019-1");
+	pageTracker._initData();
+	pageTracker._trackPageview();
+</script>
+JAVASCRIPT
+    
     print end_html;
 }
