@@ -1,3 +1,18 @@
+var colors = [
+"Gray",
+"Red",
+"Maroon",
+"Yellow",
+"Olive",
+"Lime",
+"Green", 
+"Aqua",
+"Teal",
+"Blue",
+"Navy",
+"Fuchsia",
+"Purple"];
+
 function getRequest(){
 	var xhr; 
    	try {  
@@ -13,7 +28,6 @@ function getRequest(){
    	}
    	return xhr;
 }
-
 
 function asyncBuilding(){
 	var http = getRequest();
@@ -51,13 +65,13 @@ function asyncBuilding(){
 	   					if(loc.filePrefix == "CERN_Prevessin_A3_Paysage"){
 	   						if(pre < 31){
 	   							document.getElementById("results_list_prevessin").appendChild(node);		
-		   						drawMarker(node,preC,loc.x1,loc.y1,loc.x2,loc.y2);
+		   						drawMarker(node,preC,pre,loc.x1,loc.y1,loc.x2,loc.y2);
 		   					}
 		   					pre++;
 		   				}else{
 		   					if(mey < 31){
 	   							document.getElementById("results_list_meyrin").appendChild(node);		
-		   						drawMarker(node,meyC,loc.x1,loc.y1,loc.x2,loc.y2);
+		   						drawMarker(node,meyC,mey,loc.x1,loc.y1,loc.x2,loc.y2);
 		   					}
 		   					mey++;
 						}		   				
@@ -175,13 +189,13 @@ function draw() {
 	p.style.visibility = 'hidden';
 }
  
-function drawMarker(node,ctx,x1,y1,x2,y2){
+function drawMarker(node,ctx,cnt,x1,y1,x2,y2){
 	var bbox = node.getBoundingClientRect();
 
 	var xOffset=window.scrollX;
 	var yOffset=window.scrollY;
 
-    ctx.strokeStyle = 'darkorange';
+    ctx.strokeStyle = colors[cnt % colors.length];//'darkorange';
     ctx.beginPath();
     ctx.lineWidth = 3;
     ctx.moveTo(0,0);
