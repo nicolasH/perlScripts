@@ -13,6 +13,7 @@ var colors = [
 "Fuchsia",
 "Purple"];
 
+//This methods gets the ajax request depending on the browser.
 function getRequest(){
 	var xhr; 
    	try {  
@@ -29,6 +30,7 @@ function getRequest(){
    	return xhr;
 }
 
+//This methods is invoked when the user clicks on the 'Locate' button.
 function asyncBuilding(){
 	var http = getRequest();
 	//reseting the background.
@@ -38,38 +40,26 @@ function asyncBuilding(){
        		if(http.status  == 200) {
    	         	results = eval('(' + http.responseText + ')');
    	         	var txt = "";
-   	         	/*
-   	         	if(results.length > 1){
-   	         		txt = "Found "+results.length+" results : ";
-   	         	}
-   	         	if(results.length == 1 && results[0] != undefined && results[0].word != undefined){
-   	         		txt = "Found one result : ";
-   	         	}
-   	         	if(results.length < 1){
-   	         		txt = "No results found. <br/>Try with less letters or numbers.";
-   	         	}
-   	         	if(results.length >15){
-   	         		txt = "Found "+results.length+" result. Please refine your search. <br/> Showing first 15 :";
-   	         	}*/
 
          		var mey = 0;
          		var pre = 0;
+         		var limit = 21;
          		var meyC = document.getElementById('canvas_meyrin').getContext('2d');
 		   		var preC = document.getElementById('canvas_prevessin').getContext('2d');
-					
+				
    	         	for(var i = 0; i< results.length; i++){  	  				
    					var loc = results[i];
    					if(loc != undefined && loc.word != undefined){
    						node = document.createElement('li');
 	   					node.innerHTML = loc.word;
 	   					if(loc.filePrefix == "CERN_Prevessin_A3_Paysage"){
-	   						if(pre < 31){
+	   						if(pre < limit){
 	   							document.getElementById("results_list_prevessin").appendChild(node);		
 		   						drawMarker(node,preC,pre,loc.x1,loc.y1,loc.x2,loc.y2);
 		   					}
 		   					pre++;
 		   				}else{
-		   					if(mey < 31){
+		   					if(mey < limit){
 	   							document.getElementById("results_list_meyrin").appendChild(node);		
 		   						drawMarker(node,meyC,mey,loc.x1,loc.y1,loc.x2,loc.y2);
 		   					}
@@ -83,7 +73,7 @@ function asyncBuilding(){
    				if(mey>0){
    					showImage('CERN_Meyrin_A3_Paysage');
    				}
-   				txt = "More elements available, only showing first 30. Please refine your search.";
+   				txt = "More elements available, only showing first "+(limit-1)+". Please refine your search.";
    				if(pre>30){
 						node = document.createElement('li');
 	   					node.innerHTML = txt;
@@ -111,6 +101,7 @@ function asyncBuilding(){
    		http.send(url);
 }
 
+// Switch between the canvas.
 function showImage(key){
 	var mey = document.getElementById('canvas_meyrin');
    	var pre = document.getElementById('canvas_prevessin');
@@ -137,9 +128,8 @@ function showImage(key){
 		p.style.visibility = 'hidden';
 	}
 }
-/*
-Cleaning up the canvas and results
-*/
+
+//Cleaning up the canvas and results
 function cleanup(){
 
 	var cell = document.getElementById("results_list_prevessin");
@@ -162,9 +152,8 @@ function cleanup(){
    	draw();
 }
 
-/*
-load the images
-*/
+
+//load the images and prepares the corresponding canvas.
 function draw() {
 	var mey = document.getElementById('canvas_meyrin').getContext('2d');
    	var pre = document.getElementById('canvas_prevessin').getContext('2d');
@@ -182,13 +171,15 @@ function draw() {
     document.meyrin = new Image();
   	document.meyrin.onload = function(){
       mey.drawImage(document.meyrin,0,0);
-      m.style.visibility = 'hidden';
+      //m.style.visibility = 'hidden';
+      showImage('CERN_Meyrin_A3_Paysage');
     }
     document.meyrin.src = 'CERN_Meyrin_A3_Paysage.png';
 	m.style.visibility = 'hidden';
 	p.style.visibility = 'hidden';
 }
  
+
 function drawMarker(node,ctx,cnt,x1,y1,x2,y2){
 	var bbox = node.getBoundingClientRect();
 
@@ -199,10 +190,12 @@ function drawMarker(node,ctx,cnt,x1,y1,x2,y2){
     ctx.beginPath();
     ctx.lineWidth = 3;
     ctx.moveTo(0,0);
-    y1 = (1124 - y1*1.3333333  );  
-    x1 = x1 * 1.3333;
-    y2 = (1124 - y2*1.3333333  );
-    x2 = x2 * 1.3333;
+    var magic = 1.3333333333333;
+    //1.3333333 is the magic number that translate the pdf's 'Point' coordinates to the screen's pixel coordinates.
+    y1 = (1124 - y1*magic  );  
+    x1 = x1 * magic;
+    y2 = (1124 - y2*magic  );
+    x2 = x2 * magic;
     if( xOffset==undefined){
     	xOffset=0;}
 	if( yOffset==undefined){
