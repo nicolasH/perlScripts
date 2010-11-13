@@ -67,8 +67,12 @@ print
        "</ul>\n",
        "</div>\n";
 
-    print canvas({-id=>'canvas_prevessin',-width=>1589,-height=>1124}),"</canvas>\n";
-    print canvas({-id=>'canvas_meyrin',-width=>1589,-height=>1124}),"</canvas>\n";
+	my $width = 1589;
+	my $height = 1124;
+	$width = 2000;
+	$height = 1414;
+    print canvas({-id=>'canvas_prevessin',-width=>$width,-height=>$height}),"</canvas>\n";
+    print canvas({-id=>'canvas_meyrin',-width=>$width,-height=>$height}),"</canvas>\n";
     print <<'JAVASCRIPT';
     <script type="text/javascript">
 	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

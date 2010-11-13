@@ -166,7 +166,7 @@ function draw() {
       pre.drawImage(document.prevessin,0,0);
       p.style.visibility = 'hidden';
     }
-    document.prevessin.src = 'CERN_Prevessin_A3_Paysage.png';
+    document.prevessin.src = 'CERN_Prevessin_A3_Paysage_2k.png';
 
     document.meyrin = new Image();
   	document.meyrin.onload = function(){
@@ -174,7 +174,7 @@ function draw() {
       //m.style.visibility = 'hidden';
       showImage('CERN_Meyrin_A3_Paysage');
     }
-    document.meyrin.src = 'CERN_Meyrin_A3_Paysage.png';
+    document.meyrin.src = 'CERN_Meyrin_A3_Paysage_2k.png';
 	m.style.visibility = 'hidden';
 	p.style.visibility = 'hidden';
 }
@@ -186,16 +186,25 @@ function drawMarker(node,ctx,cnt,x1,y1,x2,y2){
 	var xOffset=window.scrollX;
 	var yOffset=window.scrollY;
 
+    var imageWidth=1589;
+    var imageHeight=1124 ;
+    
+    var magic = 1.3333333333333;
+
+    var magic_2k = 1.6782043214;
+    var imageWidth_2k=2000;
+    var imageHeight_2k=1414;
+    
     ctx.strokeStyle = colors[cnt % colors.length];//'darkorange';
     ctx.beginPath();
     ctx.lineWidth = 3;
     ctx.moveTo(0,0);
-    var magic = 1.3333333333333;
+    
     //1.3333333 is the magic number that translate the pdf's 'Point' coordinates to the screen's pixel coordinates.
-    y1 = (1124 - y1*magic  );  
-    x1 = x1 * magic;
-    y2 = (1124 - y2*magic  );
-    x2 = x2 * magic;
+    y1 = (imageHeight_2k - y1*magic_2k  );  
+    x1 = x1 * magic_2k;
+    y2 = (imageHeight_2k - y2*magic_2k  );
+    x2 = x2 * magic_2k;
     if( xOffset==undefined){
     	xOffset=0;}
 	if( yOffset==undefined){
